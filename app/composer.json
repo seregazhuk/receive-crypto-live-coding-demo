@@ -4,7 +4,8 @@
     "require": {
         "temporal/sdk": "^2.15",
         "moneyphp/money": "^4.7",
-        "symfony/dotenv": "^7.3"
+        "symfony/dotenv": "^7.3",
+        "drlecks/simple-web3-php": "^0.10.0"
     },
     "autoload": {
       "psr-4": {
