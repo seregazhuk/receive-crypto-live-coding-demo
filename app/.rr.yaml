@@ -1,0 +1,17 @@
+version: "3"
+
+rpc:
+  listen: tcp://127.0.0.1:6001
+
+server:
+  command: "php worker.php"
+
+temporal:
+  address: '127.0.0.1:7233'
+  activities:
+    num_workers: 4
+
+logs:
+  level: debug
+  mode: development
+
