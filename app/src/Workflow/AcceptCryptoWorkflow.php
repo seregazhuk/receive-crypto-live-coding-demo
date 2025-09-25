@@ -17,6 +17,12 @@ use Temporal\Workflow\WorkflowMethod;
 #[WorkflowInterface]
 class AcceptCryptoWorkflow
 {
+    private const string WAIT_FOR_PAYMENT_TIMEOUT = '10 minutes';
+    /**
+     * @var true
+     */
+    private bool $paymentReceived = false;
+
     public function __construct() {
         $this->addressActivity = Workflow::newActivityStub(
             AddressActivity::class,
@@ -32,8 +38,17 @@ class AcceptCryptoWorkflow
     #[WorkflowMethod(name: 'acceptCrypto')]
     public function acceptCrypto(AddressWithAmount $request): Generator
     {
-        while (! yield $this->addressActivity->hasEnoughBalance($request)) {
-            yield Workflow::timer(3);
+        $waitingBalance = Workflow::async(
+            function () use ($request) {
+                while (! yield $this->addressActivity->hasEnoughBalance($request)) {
+                    yield Workflow::timer(3);
+                }
+                $this->paymentReceived = true;
+            }
+        );
+        yield Workflow::awaitWithTimeout(self::WAIT_FOR_PAYMENT_TIMEOUT, fn() => $this->paymentReceived);
+        if (!$this->paymentReceived) {
+            $waitingBalance->cancel();
         }
 
         /** @var RefillAmount $refillAmount */
